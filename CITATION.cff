@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Benchmark-Agent"
+abstract: "Research harness for LLM-guided generation and evaluation of performance benchmarks for InfluxDB under five levels of human guidance."
+type: software
+authors:
+  - family-names: Horn
+    given-names: Willi Leonard
+    affiliation: Technische Universität Berlin
+version: 1.0.0
+date-released: 2026-10-12
+license: MIT
+keywords:
+  - performance benchmarking
+  - large language models
+  - benchmark generation
+  - InfluxDB
+  - behave

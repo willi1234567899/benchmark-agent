@@ -1,0 +1,544 @@
+{
+  "repo": "https://github.com/DPS25/bddbench",
+  "commit": "42ddad598eba29481f66f37c2ce3abff75db3e43",
+  "source_sha256": {
+    "src/utils.py": "67c559d86f041f2540bafb606ee7597639b380442eb7d721cc83a675dcbb656d",
+    "features/environment.py": "042e459fac3a971e5765efc47a36dfcf1ed83c298c7dab39a14e04b8ac52c039",
+    "features/steps/influx_global_endpoint_steps.py": "c257cbc731bb3907de8dbe0d654dac3541190e250e8a4dceee389741367b93da",
+    "features/steps/influx_write_steps.py": "ee3c608b451c067567ef696d9c55cdfa56708c2c41e9d627e9285476b89762eb",
+    "features/steps/influx_query_steps.py": "ede383f55085cc8d7a27687edd15cfc9d56c52233925806b2916ad73d400d099",
+    "features/steps/influx_delete_steps.py": "8e726b3989540b7247bf46b38258367a11b7ea2e47bd53d9b9daa9a8a7e0a71f",
+    "features/influx_write_benchmark.feature": "2f6a91215da683109edcf95e0f6fe5ae4352af2666bf07f45241b49166ed0527",
+    "features/influx_query_benchmark.feature": "b07b5213185fff2d22e7584a036f8d0f3493fc6a551b707fd4fa497b0923b826",
+    "features/influx_delete_benchmark.feature": "768275cf0f0e16d58fc4b9e006686386fceb98c2af03e55b7f7e4dd697959ad3"
+  },
+  "sections": [
+    {
+      "kind": "port-only",
+      "title": "header, merged imports, PORT C02/C13 helpers"
+    },
+    {
+      "kind": "verbatim",
+      "file": "src/utils.py",
+      "lines": [
+        230,
+        242
+      ],
+      "logger_rename": null,
+      "title": "influx_precision_from_str",
+      "changes": []
+    },
+    {
+      "kind": "verbatim",
+      "file": "src/utils.py",
+      "lines": [
+        245,
+        254
+      ],
+      "logger_rename": null,
+      "title": "base_timestamp_for_precision",
+      "changes": []
+    },
+    {
+      "kind": "changed",
+      "file": "src/utils.py",
+      "lines": [
+        257,
+        301
+      ],
+      "logger_rename": null,
+      "title": "build_benchmark_point",
+      "changes": [
+        "C11",
+        "C12",
+        "C13"
+      ]
+    },
+    {
+      "kind": "verbatim",
+      "file": "src/utils.py",
+      "lines": [
+        382,
+        407
+      ],
+      "logger_rename": null,
+      "title": "write_json_report",
+      "changes": []
+    },
+    {
+      "kind": "verbatim",
+      "file": "features/environment.py",
+      "lines": [
+        14,
+        25
+      ],
+      "logger_rename": "_env_logger",
+      "title": "environment logger, _env_truthy, _env_strip",
+      "changes": []
+    },
+    {
+      "kind": "changed",
+      "file": "features/environment.py",
+      "lines": [
+        75,
+        202
+      ],
+      "logger_rename": "_env_logger",
+      "title": "_load_env",
+      "changes": [
+        "C04",
+        "C05",
+        "C06"
+      ]
+    },
+    {
+      "kind": "verbatim",
+      "file": "features/environment.py",
+      "lines": [
+        231,
+        237
+      ],
+      "logger_rename": null,
+      "title": "_ensure_influx_initialized",
+      "changes": []
+    },
+    {
+      "kind": "changed",
+      "file": "features/steps/influx_global_endpoint_steps.py",
+      "lines": [
+        8,
+        24
+      ],
+      "logger_rename": null,
+      "title": "Background steps",
+      "changes": [
+        "C07",
+        "C08"
+      ]
+    },
+    {
+      "kind": "verbatim",
+      "file": "features/steps/influx_write_steps.py",
+      "lines": [
+        28,
+        47
+      ],
+      "logger_rename": "_write_logger",
+      "title": "write logger, BatchWriteMetrics, _maybe_cleanup_before_run",
+      "changes": []
+    },
+    {
+      "kind": "verbatim",
+      "file": "features/steps/influx_write_steps.py",
+      "lines": [
+        132,
+        202
+      ],
+      "logger_rename": null,
+      "title": "_run_writer_worker",
+      "changes": []
+    },
+    {
+      "kind": "changed",
+      "file": "features/steps/influx_write_steps.py",
+      "lines": [
+        205,
+        341
+      ],
+      "logger_rename": "_write_logger",
+      "title": "write step",
+      "changes": [
+        "C13"
+      ]
+    },
+    {
+      "kind": "changed",
+      "file": "features/steps/influx_write_steps.py",
+      "lines": [
+        344,
+        367
+      ],
+      "logger_rename": "_write_logger",
+      "title": "store write result",
+      "changes": [
+        "C10"
+      ]
+    },
+    {
+      "kind": "verbatim",
+      "file": "features/steps/influx_write_steps.py",
+      "lines": [
+        369,
+        392
+      ],
+      "logger_rename": "_write_logger",
+      "title": "store write context",
+      "changes": []
+    },
+    {
+      "kind": "verbatim",
+      "file": "features/steps/influx_query_steps.py",
+      "lines": [
+        24,
+        38
+      ],
+      "logger_rename": "_query_logger",
+      "title": "query logger, QueryRunMetrics",
+      "changes": []
+    },
+    {
+      "kind": "changed",
+      "file": "features/steps/influx_query_steps.py",
+      "lines": [
+        40,
+        108
+      ],
+      "logger_rename": null,
+      "title": "_build_flux_query",
+      "changes": [
+        "C15",
+        "C16"
+      ]
+    },
+    {
+      "kind": "verbatim",
+      "file": "features/steps/influx_query_steps.py",
+      "lines": [
+        111,
+        284
+      ],
+      "logger_rename": null,
+      "title": "_run_single_query, _summarize_query_runs",
+      "changes": []
+    },
+    {
+      "kind": "changed",
+      "file": "features/steps/influx_query_steps.py",
+      "lines": [
+        395,
+        462
+      ],
+      "logger_rename": "_query_logger",
+      "title": "query step",
+      "changes": [
+        "C15",
+        "C17"
+      ]
+    },
+    {
+      "kind": "changed",
+      "file": "features/steps/influx_query_steps.py",
+      "lines": [
+        465,
+        485
+      ],
+      "logger_rename": "_query_logger",
+      "title": "store query result",
+      "changes": [
+        "C10"
+      ]
+    },
+    {
+      "kind": "verbatim",
+      "file": "features/steps/influx_delete_steps.py",
+      "lines": [
+        21,
+        21
+      ],
+      "logger_rename": "_delete_logger",
+      "title": "delete logger",
+      "changes": []
+    },
+    {
+      "kind": "verbatim",
+      "file": "features/steps/influx_delete_steps.py",
+      "lines": [
+        84,
+        90
+      ],
+      "logger_rename": null,
+      "title": "DeleteRunMetrics",
+      "changes": []
+    },
+    {
+      "kind": "changed",
+      "file": "features/steps/influx_delete_steps.py",
+      "lines": [
+        203,
+        268
+      ],
+      "logger_rename": "_delete_logger",
+      "title": "_delete_measurement_run",
+      "changes": [
+        "C09",
+        "C18"
+      ]
+    },
+    {
+      "kind": "changed",
+      "file": "features/steps/influx_delete_steps.py",
+      "lines": [
+        284,
+        341
+      ],
+      "logger_rename": "_delete_logger",
+      "title": "delete step",
+      "changes": [
+        "C19"
+      ]
+    },
+    {
+      "kind": "changed",
+      "file": "features/steps/influx_delete_steps.py",
+      "lines": [
+        361,
+        389
+      ],
+      "logger_rename": "_delete_logger",
+      "title": "store delete result",
+      "changes": [
+        "C10"
+      ]
+    }
+  ],
+  "changes": [
+    {
+      "id": "C13",
+      "file": "src/utils.py",
+      "original_lines": [
+        283,
+        283
+      ],
+      "what": "in-order spacing 1 time unit -> 1 s"
+    },
+    {
+      "id": "C11",
+      "file": "src/utils.py",
+      "original_lines": [
+        285,
+        285
+      ],
+      "what": "tags device_id=dev-N -> host=h(N+1) + constant source=gold"
+    },
+    {
+      "id": "C12",
+      "file": "src/utils.py",
+      "original_lines": [
+        289,
+        289
+      ],
+      "what": "fields value(float)+seq(int) -> value(int)"
+    },
+    {
+      "id": "C04",
+      "file": "features/environment.py",
+      "original_lines": [
+        90,
+        145
+      ],
+      "what": "MAIN KPI database init removed"
+    },
+    {
+      "id": "C05",
+      "file": "features/environment.py",
+      "original_lines": [
+        175,
+        183
+      ],
+      "what": "ping/auth/bucket requests removed"
+    },
+    {
+      "id": "C06",
+      "file": "features/environment.py",
+      "original_lines": [
+        196,
+        202
+      ],
+      "what": "ssh hostname + GET /health removed"
+    },
+    {
+      "id": "C07",
+      "file": "features/steps/influx_global_endpoint_steps.py",
+      "original_lines": [
+        8,
+        12
+      ],
+      "what": "Background step 1: text + ping removed, client init moved here"
+    },
+    {
+      "id": "C08",
+      "file": "features/steps/influx_global_endpoint_steps.py",
+      "original_lines": [
+        15,
+        15
+      ],
+      "what": "Background step 2: text"
+    },
+    {
+      "id": "C08",
+      "file": "features/steps/influx_global_endpoint_steps.py",
+      "original_lines": [
+        20,
+        24
+      ],
+      "what": "Background step 2: bucket lookup removed"
+    },
+    {
+      "id": "C13",
+      "file": "features/steps/influx_write_steps.py",
+      "original_lines": [
+        257,
+        257
+      ],
+      "what": "base timestamp anchored total_points x 1 s before now"
+    },
+    {
+      "id": "C10",
+      "file": "features/steps/influx_write_steps.py",
+      "original_lines": [
+        367,
+        367
+      ],
+      "what": "write KPI export call removed"
+    },
+    {
+      "id": "C15",
+      "file": "features/steps/influx_query_steps.py",
+      "original_lines": [
+        43,
+        43
+      ],
+      "what": "_build_flux_query: host parameter"
+    },
+    {
+      "id": "C16",
+      "file": "features/steps/influx_query_steps.py",
+      "original_lines": [
+        52,
+        52
+      ],
+      "what": "result size small: limit 500 -> 25"
+    },
+    {
+      "id": "C15",
+      "file": "features/steps/influx_query_steps.py",
+      "original_lines": [
+        68,
+        70
+      ],
+      "what": "filter query: exists r[\"value\"] -> r[\"host\"] == host"
+    },
+    {
+      "id": "C17",
+      "file": "features/steps/influx_query_steps.py",
+      "original_lines": [
+        399,
+        400
+      ],
+      "what": "query step text: + host, + repeats"
+    },
+    {
+      "id": "C17",
+      "file": "features/steps/influx_query_steps.py",
+      "original_lines": [
+        407,
+        409
+      ],
+      "what": "query step parameters: + host, + repeats"
+    },
+    {
+      "id": "C15",
+      "file": "features/steps/influx_query_steps.py",
+      "original_lines": [
+        426,
+        426
+      ],
+      "what": "host passed to _build_flux_query"
+    },
+    {
+      "id": "C17",
+      "file": "features/steps/influx_query_steps.py",
+      "original_lines": [
+        442,
+        442
+      ],
+      "what": "number of queries: concurrent_clients -> concurrent_clients x repeats"
+    },
+    {
+      "id": "C10",
+      "file": "features/steps/influx_query_steps.py",
+      "original_lines": [
+        485,
+        485
+      ],
+      "what": "query KPI export call removed"
+    },
+    {
+      "id": "C18",
+      "file": "features/steps/influx_delete_steps.py",
+      "original_lines": [
+        203,
+        203
+      ],
+      "what": "_delete_measurement_run: host parameter"
+    },
+    {
+      "id": "C18",
+      "file": "features/steps/influx_delete_steps.py",
+      "original_lines": [
+        212,
+        212
+      ],
+      "what": "run-scope guard removed"
+    },
+    {
+      "id": "C09",
+      "file": "features/steps/influx_delete_steps.py",
+      "original_lines": [
+        214,
+        214
+      ],
+      "what": "count query before delete removed"
+    },
+    {
+      "id": "C18",
+      "file": "features/steps/influx_delete_steps.py",
+      "original_lines": [
+        219,
+        219
+      ],
+      "what": "delete predicate run_id -> host"
+    },
+    {
+      "id": "C09",
+      "file": "features/steps/influx_delete_steps.py",
+      "original_lines": [
+        239,
+        239
+      ],
+      "what": "count query after delete removed"
+    },
+    {
+      "id": "C19",
+      "file": "features/steps/influx_delete_steps.py",
+      "original_lines": [
+        284,
+        341
+      ],
+      "what": "delete step: one pinned delete instead of smoke+load"
+    },
+    {
+      "id": "C10",
+      "file": "features/steps/influx_delete_steps.py",
+      "original_lines": [
+        384,
+        389
+      ],
+      "what": "delete KPI export call removed"
+    }
+  ],
+  "outputs_sha256": {
+    "fixture/steps.py": "40d119c3878bf8ae8c3e4be32322a234082a740174a6b720cc214c8e91378490",
+    "changes.diff": "fe252b7b83ed1020166b97ad040c91ee053a2405fe8ca20568722ec4ebc2daa5"
+  }
+}

@@ -1,0 +1,364 @@
+--- bddbench/src/utils.py:257-301
++++ fixture/steps.py [bddbench src/utils.py:257-301]
+@@ -25,11 +25,13 @@
+         ts = base_ts + jitter
+     else:
+-        ts = base_ts + idx
++        ts = base_ts + idx * _ONE_SECOND[precision]  # PORT C13: 1 s apart, as gold_live
+ 
+-    p = Point(measurement).tag("device_id", f"dev-{device_id}")
++    # PORT C11: workload tag host=h1..h5 (cycled by idx) instead of device_id=dev-N; constant
++    # marker tag source=gold as in gold_live, so the line protocol has the same bytes.
++    p = Point(measurement).tag("source", "gold").tag("host", f"h{device_id + 1}")
+     if run_id:
+         p = p.tag("run_id", str(run_id))
+ 
+-    p = p.field("value", float(idx)).field("seq", idx)
++    p = p.field("value", idx)  # PORT C12: one integer field value (gold_live: value=<n>i)
+ 
+     # Feature files currently use low/medium/high. Keep backwards compatibility:
+
+--- bddbench/features/environment.py:75-202 (logger renamed)
++++ fixture/steps.py [bddbench features/environment.py:75-202]
+@@ -14,60 +14,7 @@
+     context.influxdb.export_strict = _env_truthy("INFLUXDB_EXPORT_STRICT", "0")
+ 
+-    # ----- main influx DB -----
+-    require_main = _env_truthy("INFLUXDB_REQUIRE_MAIN", "0")
+-    skip_main = _env_truthy("INFLUXDB_SKIP_MAIN", "0")
+-
+-    context.influxdb.main.url = _env_strip("INFLUXDB_MAIN_URL", "http://localhost:8086")
+-    context.influxdb.main.token = _env_strip("INFLUXDB_MAIN_TOKEN", None)
+-    context.influxdb.main.org = _env_strip("INFLUXDB_MAIN_ORG", None)
+-    context.influxdb.main.bucket = _env_strip("INFLUXDB_MAIN_BUCKET", None)
+-    
+-    main_cfg_complete = bool(
+-        (context.influxdb.main.url or "").strip()
+-        and (context.influxdb.main.token or "").strip()
+-        and (context.influxdb.main.org or "").strip()
+-        and (context.influxdb.main.bucket or "").strip()
+-    )
+-
+-    if skip_main:
+-        _env_logger.info("INFLUXDB_SKIP_MAIN=1 -> skipping MAIN InfluxDB initialization")
+-    elif not main_cfg_complete:
+-        msg = "MAIN InfluxDB is not fully configured (INFLUXDB_MAIN_*). Export to MAIN will be skipped."
+-        if require_main:
+-            raise AssertionError(msg + " (Set INFLUXDB_REQUIRE_MAIN=0 to allow running without MAIN.)")
+-        _env_logger.warning(msg)
+-    else:
+-        try:
+-            context.influxdb.main.client = InfluxDBClient(
+-                url=context.influxdb.main.url,
+-                token=context.influxdb.main.token,
+-                org=context.influxdb.main.org,
+-            )
+-
+-            if not context.influxdb.main.client.ping():
+-                raise AssertionError("Cannot reach MAIN InfluxDB endpoint (ping failed).")
+-
+-            _validate_influx_auth(context.influxdb.main.client, label="MAIN")
+-
+-            _validate_bucket_exists(
+-                context.influxdb.main.client,
+-                bucket=context.influxdb.main.bucket,
+-                label="MAIN",
+-            )
+-            
+-            context.influxdb.main.write_api = context.influxdb.main.client.write_api(
+-                write_options=SYNCHRONOUS
+-            )
+-            context.influxdb.main.query_api = context.influxdb.main.client.query_api()
+-
+-            _env_logger.info("successfully connected and authenticated to MAIN InfluxDB")
+-        except Exception as exc:
+-            if require_main:
+-                raise
+-            _env_logger.warning(f"MAIN InfluxDB init failed ({exc}). Export to MAIN will be skipped.")
+-            context.influxdb.main.client = None
+-            context.influxdb.main.write_api = None
+-            context.influxdb.main.query_api = None
+-        
++    # PORT C04: MAIN (KPI) InfluxDB initialisation removed (bddbench environment.py:90-145):
++    # no second InfluxDB, no KPI export; its default URL http://localhost:8086 is the
++    # engine's measurement proxy.
+     # ----- SUT influx DB -----
+     context.influxdb.sut.url = _env_strip("INFLUXDB_SUT_URL", "http://localhost:8086")
+@@ -99,13 +46,8 @@
+         org=context.influxdb.sut.org,
+     )
+-    if not context.influxdb.sut.client.ping():
+-        raise AssertionError("Cannot reach SUT InfluxDB endpoint (ping failed).")
+-    _validate_influx_auth(context.influxdb.sut.client, label="SUT")
+-    _validate_bucket_exists(
+-        context.influxdb.sut.client,
+-        bucket=context.influxdb.sut.bucket,
+-        label="SUT",
+-    )
+-    _env_logger.info("successfully connected and authenticated to SUT InfluxDB")
++    # PORT C05: removed (bddbench environment.py:175-183): client.ping() (GET /ping),
++    # _validate_influx_auth (GET /api/v2/buckets), _validate_bucket_exists
++    # (GET /api/v2/buckets?name=...) and the 'authenticated' log line - requests that
++    # gold_live does not send inside the measurement window.
+ 
+     context.influxdb.sut.write_api = context.influxdb.sut.client.write_api(
+@@ -120,9 +62,4 @@
+ 
+ 
+-    context.influxdb.sut.host = _run_on_sut(["hostname"]).stdout.strip()
+-    health = context.influxdb.sut.client.health()
+-    context.influxdb.sut.commit = health.commit
+-    context.influxdb.sut.version = health.version
+-    _env_logger.debug(f"SUT InfluxDB commit: {context.influxdb.sut.commit}")
+-    _env_logger.debug(f"SUT InfluxDB version: {context.influxdb.sut.version}")
+-    _env_logger.debug(f"SUT host identifier: {context.influxdb.sut.host}")
++    # PORT C06: removed (bddbench environment.py:196-202): _run_on_sut(["hostname"]) (ssh
++    # to the SUT host) and client.health() (GET /health); they only fed KPI-export tags.
+
+--- bddbench/features/steps/influx_global_endpoint_steps.py:8-24
++++ fixture/steps.py [bddbench features/steps/influx_global_endpoint_steps.py:8-24]
+@@ -1,17 +1,18 @@
+-@given("a SUT InfluxDB v2 endpoint is configured and reachable")
++@given("a SUT InfluxDB v2 endpoint is configured")
+ def step_bucket_from_env(context: Context):
+-    if not context.influxdb.sut.client.ping():
+-        logger.error("SUT InfluxDB endpoint is not reachable")
+-        raise RuntimeError("SUT InfluxDB endpoint is not reachable")
++    # PORT C07: bddbench text "... is configured and reachable"; its reachability check
++    # client.ping() (GET /ping) is removed - gold_live sends no such request.
++    # PORT C01: the engine stages no environment.py, so the SUT part of bddbench's
++    # before_all (environment.py:290 -> _ensure_influx_initialized -> _load_env) runs
++    # here, after PORT C02 maps the engine's variables onto bddbench's names.
++    _map_engine_env_to_bddbench()
++    _ensure_influx_initialized(context)
+ 
+ 
+-@given("the target bucket from the SUT config is available")
++@given("the target bucket from the SUT config is set")  # PORT C08 (bddbench: "is available")
+ def step_target_bucket_available(context: Context) -> None:
+     assert context.influxdb.sut.bucket is not None, (
+         "SUT InfluxDB bucket is not configured"
+     )
+-    bucket_api = context.influxdb.sut.client.buckets_api()
+-    bucket_response = bucket_api.find_bucket_by_name(context.influxdb.sut.bucket)
+-    assert bucket_response is not None, (
+-        f"SUT InfluxDB bucket '{context.influxdb.sut.bucket}' is not available"
+-    )
++    # PORT C08: bucket lookup buckets_api().find_bucket_by_name (GET /api/v2/buckets?name=...)
++    # removed - gold_live sends no such request.
+
+--- bddbench/features/steps/influx_write_steps.py:205-341 (logger renamed)
++++ fixture/steps.py [bddbench features/steps/influx_write_steps.py:205-341]
+@@ -51,5 +51,9 @@
+     _write_logger.debug("got SUT InfluxDB connection parameters")
+     precision_enum = influx_precision_from_str(precision)
+-    base_ts = base_timestamp_for_precision(precision_enum)
++    # PORT C13: anchor the in-order series so that its last point lies 1 s before now and the
++    # points are 1 s apart, exactly as gold_live (tests/fixtures/gold_live/steps.py:52,62).
++    base_ts = base_timestamp_for_precision(precision_enum) - (
++        parallel_writers * batches * batch_size * _ONE_SECOND[precision_enum]
++    )
+ 
+     _maybe_cleanup_before_run(context, measurement)
+
+--- bddbench/features/steps/influx_write_steps.py:344-367 (logger renamed)
++++ fixture/steps.py [bddbench features/steps/influx_write_steps.py:344-367]
+@@ -22,3 +22,4 @@
+     )
+ 
+-    _export_write_result_to_main_influx(result, outfile, context)
++    # PORT C10: KPI export to the MAIN InfluxDB removed
++    # (bddbench: _export_write_result_to_main_influx(result, outfile, context)).
+
+--- bddbench/features/steps/influx_query_steps.py:40-108
++++ fixture/steps.py [bddbench features/steps/influx_query_steps.py:40-108]
+@@ -2,5 +2,6 @@
+ 
+ def _build_flux_query(
+-    bucket: str, measurement: str, time_range: str, query_type: str, result_size: str, run_id: Optional[str] = None
++    bucket: str, measurement: str, time_range: str, query_type: str, result_size: str, run_id: Optional[str] = None,
++    host: Optional[str] = None,  # PORT C15
+ ) -> str:
+     """
+@@ -11,5 +12,5 @@
+       - result_size small/large controls limit()
+     """
+-    limit_small = 500
++    limit_small = 25  # PORT C16: pinned read limit (workload v3: limit(n: 25)); bddbench: 500
+     limit_large = 50_000
+ 
+@@ -27,7 +28,9 @@
+ """.strip()
+ 
++    # PORT C15: the pinned read filters on the tag host (workload v3) instead of
++    # bddbench's `exists r["value"]` (a column that unpivoted rows do not have).
+     if query_type == "filter":
+         flux = f"""{base}
+-  |> filter(fn: (r) => exists r["value"])
++  |> filter(fn: (r) => r["host"] == "{host}")
+   |> limit(n: {limit_n})
+ """
+
+--- bddbench/features/steps/influx_query_steps.py:395-462 (logger renamed)
++++ fixture/steps.py [bddbench features/steps/influx_query_steps.py:395-462]
+@@ -3,6 +3,7 @@
+ @when(
+     'I run a generic query benchmark on measurement "{measurement}" '
+-    'with time range "{time_range}" using query type "{query_type}" '
++    'with time range "{time_range}" using query type "{query_type}" on tag host "{host}" '
+     'and result size "{result_size}" with {concurrent_clients:d} concurrent clients, '
++    '{repeats:d} sequential repeats, '  # PORT C15/C17: host filter, sequential repeats
+     'output format "{output_format}" and compression "{compression}"'
+ )
+@@ -12,6 +13,8 @@
+     time_range,
+     query_type,
++    host,  # PORT C15
+     result_size,
+     concurrent_clients,
++    repeats,  # PORT C17
+     output_format,
+     compression,
+@@ -31,4 +34,5 @@
+         result_size,
+         run_id=getattr(context, "run_id", None),
++        host=host,  # PORT C15
+     )
+ 
+@@ -46,5 +50,7 @@
+                 compression=compression,
+             )
+-            for i in range(concurrent_clients)
++            # PORT C17: concurrent_clients x repeats queries; with 1 worker they run strictly
++            # one after another (gold_live: 20 sequential reads). bddbench: range(concurrent_clients)
++            for i in range(concurrent_clients * repeats)
+         ]
+ 
+
+--- bddbench/features/steps/influx_query_steps.py:465-485 (logger renamed)
++++ fixture/steps.py [bddbench features/steps/influx_query_steps.py:465-485]
+@@ -19,3 +19,4 @@
+     )
+ 
+-    _export_query_result_to_main_influx(meta, summary, runs, outfile, context)
++    # PORT C10: KPI export to the MAIN InfluxDB removed
++    # (bddbench: _export_query_result_to_main_influx(meta, summary, runs, outfile, context)).
+
+--- bddbench/features/steps/influx_delete_steps.py:203-268 (logger renamed)
++++ fixture/steps.py [bddbench features/steps/influx_delete_steps.py:203-268]
+@@ -1,3 +1,3 @@
+-def _delete_measurement_run(context: Context, measurement: str) -> DeleteRunMetrics:
++def _delete_measurement_run(context: Context, measurement: str, host: str) -> DeleteRunMetrics:  # PORT C18
+     """
+     Delete points by (measurement + run_id). Requires context.write_benchmark_meta.
+@@ -8,12 +8,16 @@
+         raise RuntimeError("SUT InfluxDB client is not configured on context.influxdb.sut")
+ 
+-    run_id, wb_meta = _require_run_scoped_context(context, measurement)
++    # PORT C18: no run scope - the pinned delete targets measurement + tag host; bddbench's
++    # write-context guard _require_run_scoped_context would refuse exactly that.
++    run_id, wb_meta = None, {}
+ 
+-    points_before = _count_points_for_measurement(context, measurement, run_id=run_id)
++    # PORT C09: count query before the delete removed (an extra POST /api/v2/query that
++    # gold_live does not send); -1 = not counted, as in bddbench's bucket-wipe mode.
++    points_before = -1
+ 
+     delete_api = sut.client.delete_api()
+     start = "1970-01-01T00:00:00Z"
+     stop = "2100-01-01T00:00:00Z"
+-    predicate = f'_measurement="{measurement}" AND run_id="{run_id}"'
++    predicate = f'_measurement="{measurement}" AND host="{host}"'  # PORT C18 (bddbench: run_id)
+ 
+     t0 = time.perf_counter()
+@@ -35,5 +39,5 @@
+     )
+ 
+-    points_after = _count_points_for_measurement(context, measurement, run_id=run_id)
++    points_after = -1  # PORT C09: count query after the delete removed
+ 
+     expected_points = wb_meta.get("total_points") if wb_meta.get("measurement") == measurement else None
+
+--- bddbench/features/steps/influx_delete_steps.py:284-341 (logger renamed)
++++ fixture/steps.py [bddbench features/steps/influx_delete_steps.py:284-341]
+@@ -1,58 +1,9 @@
+-@when("I run the delete benchmark")
+-def step_run_delete_benchmark(context: Context) -> None:
++@when('I run the delete benchmark on measurement "{measurement}" for tag host "{host}"')
++def step_run_delete_benchmark(context: Context, measurement: str, host: str) -> None:
+     """
+-    Single entry point:
+-
+-      behave -t=delete
+-        -> deletes smoke then load (run-scoped) and writes two reports
+-
+-      behave -t=delete -D delete_all=true
+-        -> wipes the whole bucket (one operation) and writes one report
++    PORT C19: replaces bddbench's single entry point (`When I run the delete benchmark`:
++    smoke + load run-scoped deletes read from write-context files, each followed by a
++    count check and a report). The pinned workload sends exactly one delete:
++    measurement + tag host over 1970-01-01..2100-01-01 (bddbench's own range).
+     """
+-    delete_all = _truthy(context.config.userdata.get("delete_all"))
+-
+-    if delete_all:
+-        metrics = _delete_bucket_all(context)
+-        sut = context.influxdb.sut
+-
+-        # Store context so reporting/export stays consistent
+-        context.delete_metrics = metrics
+-        context.delete_benchmark_meta = {
+-            "measurement": "",
+-            "run_id": "",
+-            "bucket": sut.bucket,
+-            "org": sut.org,
+-            "sut_url": sut.url,
+-            "expected_points": None,
+-        }
+-        context.delete_summary = {
+-            "latency_s": metrics.latency_s,
+-            "points_before": -1,
+-            "points_after": -1,
+-            "deleted_points": None,
+-            "expected_points": None,
+-            "ok": metrics.ok,
+-            "status_code": metrics.status_code,
+-        }
+-
+-        step_store_delete_result(context, "reports/delete-all.json")
+-        return
+-
+-    # Default mode: delete smoke then load sequentially.
+-    smoke_ctx = "reports/write-context-smoke.json"
+-    load_ctx = "reports/write-context-load.json"
+-    measurement_default = "bddbench_single_write"
+-
+-    # smoke
+-    step_load_write_context(context, smoke_ctx)
+-    meas = context.write_benchmark_meta.get("measurement") or measurement_default
+-    _delete_measurement_run(context, meas)
+-    step_ensure_no_points_remain(context, meas)
+-    step_store_delete_result(context, "reports/delete-smoke.json")
+-
+-    # load
+-    step_load_write_context(context, load_ctx)
+-    meas = context.write_benchmark_meta.get("measurement") or measurement_default
+-    _delete_measurement_run(context, meas)
+-    step_ensure_no_points_remain(context, meas)
+-    step_store_delete_result(context, "reports/delete-load.json")
++    _delete_measurement_run(context, measurement, host)
+
+--- bddbench/features/steps/influx_delete_steps.py:361-389 (logger renamed)
++++ fixture/steps.py [bddbench features/steps/influx_delete_steps.py:361-389]
+@@ -22,8 +22,4 @@
+     )
+ 
+-    _export_delete_result_to_main_influx(
+-        context=context,
+-        meta=meta,
+-        summary=summary,
+-        outfile=outfile,
+-    )
++    # PORT C10: KPI export to the MAIN InfluxDB removed
++    # (bddbench: _export_delete_result_to_main_influx(context=..., meta=..., summary=..., outfile=...)).
+

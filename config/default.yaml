@@ -1,0 +1,42 @@
+seed: 20260715
+seed_per_repetition: true
+epoch: 17
+budget:
+  enabled: true
+  limit_usd: 50.0
+  stop_at_usd: 45.0
+  spent_before_usd: 19.9
+  tracked_since: "2026-08-28T09:30:00Z"
+repetitions: 1
+feedback:
+  max_iterations: 5
+paths:
+  config_dir: config
+  inputs_dir: inputs
+  openapi_dir: inputs/openapi
+  workload_dir: inputs/workload
+  templates_dir: src/benchmark_agent/prompting/templates
+  results_artifacts_dir: results/artifacts
+  results_raw_dir: results/raw
+sut:
+  compose_file: sut/docker-compose.yaml
+  influxdb_url: http://127.0.0.1:8086
+  influxdb_direct_url: http://127.0.0.1:8087
+  org: benchmark
+  bucket: benchmark
+  username: benchmark
+  password: benchmarkpassword
+  token: benchmark-token-change-me
+  ready_timeout_seconds: 90
+  api: tessera
+  display_name: "the Tessera time-series store (HTTP API v1)"
+execution:
+  behave_timeout_seconds: 120
+measurement:
+  proxy_listen_host: 127.0.0.1
+  proxy_listen_port: 8086
+  metrics_path: /metrics
+probing:
+  max_calls: 8
+  timeout_seconds: 5.0
+  max_response_chars: 4000

@@ -1,0 +1,10 @@
+seed,source=seed,host=h1 seed_marker=1i 1785542400000000000
+seed,source=seed,host=h1 seed_marker=2i 1785542401000000000
+seed,source=seed,host=h1 seed_marker=3i 1785542402000000000
+seed,source=seed,host=h2 seed_marker=4i 1785542400000000000
+seed,source=seed,host=h2 seed_marker=5i 1785542401000000000
+seed,source=seed,host=h2 seed_marker=6i 1785542402000000000
+cpu,host=h1,region=eu usage=0.42 1785542400000000000
+cpu,host=h1,region=eu usage=0.55 1785542401000000000
+cpu,host=h2,region=us usage=0.31 1785542400000000000
+cpu,host=h2,region=us usage=0.27 1785542401000000000

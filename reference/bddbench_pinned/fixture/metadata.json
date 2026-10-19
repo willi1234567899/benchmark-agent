@@ -1,0 +1,24 @@
+{
+  "condition": {
+    "id": 0,
+    "name": "_bddbench_pinned",
+    "guidance_level": null,
+    "model": "manual",
+    "prompting_strategy": "zero_shot"
+  },
+  "model": {
+    "provider": "none",
+    "model_name": "bddbench-port",
+    "model_version": "DPS25/bddbench@42ddad5",
+    "client_adapter": "none"
+  },
+  "sut_api": "influx",
+  "reference": {
+    "repo": "https://github.com/DPS25/bddbench",
+    "commit": "42ddad598eba29481f66f37c2ce3abff75db3e43",
+    "variant": "pinned workload v3 (config/workload.yaml), influx passthrough; request-for-request twin of tests/fixtures/gold_live",
+    "client_library": "influxdb-client==1.49.0 (reactivex==4.1.0)",
+    "provenance": "PROVENANCE.md, changes.diff, build_manifest.json next to this fixture",
+    "status": "phase 1: built and statically checked, never executed against a SUT"
+  }
+}

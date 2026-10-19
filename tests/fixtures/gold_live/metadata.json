@@ -1,0 +1,15 @@
+{
+  "condition": {
+    "id": 0,
+    "name": "_gold_live",
+    "guidance_level": "L2",
+    "model": "manual",
+    "prompting_strategy": "zero_shot"
+  },
+  "model": {
+    "provider": "none",
+    "model_name": "gold-fixture",
+    "model_version": "gold-fixture",
+    "client_adapter": "none"
+  }
+}

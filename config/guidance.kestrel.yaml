@@ -1,0 +1,76 @@
+levels:
+  L1:
+    include_workload: true
+    workload_file: kestrel_task_l1_v3.md
+    openapi_files: []
+    use_case_files: []
+    feedback_mode: null
+    feedback_files: []
+    feedback_enabled: false
+    reference_files: []
+    reference_enabled: false
+    probing_enabled: true
+  L2:
+    include_workload: true
+    workload_file: kestrel_task_v3.md
+    openapi_files:
+      - kestrel-v1.yaml
+    use_case_files: []
+    feedback_mode: null
+    feedback_files: []
+    feedback_enabled: false
+    reference_files: []
+    reference_enabled: false
+    probing_enabled: false
+  L3:
+    include_workload: true
+    workload_file: kestrel_task_v3.md
+    openapi_files:
+      - kestrel-v1.yaml
+    use_case_files:
+      - kestrel_write.md
+      - kestrel_read.md
+      - kestrel_delete.md
+    feedback_mode: null
+    feedback_files: []
+    feedback_enabled: false
+    reference_files: []
+    reference_enabled: false
+    probing_enabled: false
+  L4:
+    include_workload: true
+    workload_file: kestrel_task_v3.md
+    openapi_files:
+      - kestrel-v1.yaml
+    use_case_files:
+      - kestrel_write.md
+      - kestrel_read.md
+      - kestrel_delete.md
+    feedback_mode: hybrid
+    feedback_files:
+      - kestrel_feedback_hints.md
+    feedback_enabled: true
+    execution_feedback: true
+    reference_files: []
+    reference_enabled: false
+    probing_enabled: false
+  L5:
+    include_workload: true
+    workload_file: kestrel_task_v3.md
+    openapi_files:
+      - kestrel-v1.yaml
+    use_case_files:
+      - kestrel_write.md
+      - kestrel_read.md
+      - kestrel_delete.md
+    feedback_mode: hybrid
+    feedback_files:
+      - kestrel_feedback_hints.md
+    feedback_enabled: true
+    execution_feedback: true
+    reference_files:
+      - features/kestrel_write_benchmark.feature
+      - features/kestrel_read_benchmark.feature
+      - features/kestrel_delete_benchmark.feature
+    reference_enabled: true
+    probing_enabled: false

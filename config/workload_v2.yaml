@@ -1,0 +1,36 @@
+name: tsdb_write_read_delete_v2
+description: >-
+  Workload v2 (Epoche 4): derselbe Drei-Operationen-Smoke wie v1, aber mit spezifikations-
+  exklusiven Affordanzen — Millisekunden-Zeitstempel (Zeit-Einheit muss dem Store mitgeteilt
+  werden), Label-Kardinalität 5 beim Schreiben, Label-Filter in Read und Delete. Ein Artefakt
+  kann diese Anforderungen nur aus der API-Spezifikation (oder aus Probing) erfuellen; die
+  Konformitaetspruefung zaehlt sie als "Spec-Coverage" (evaluation/conformance.py).
+  v1 liegt unveraendert in config/workload_v1.yaml.
+measurement_window_seconds: 60
+operations:
+  write:
+    enabled: true
+    batch_size: 100
+    parallel_clients: 1
+    compression: none
+    point_complexity: simple
+    tag_cardinality: low
+    batches: 1
+    ts_unit: ms
+    label_values:
+      host: [h1, h2, h3, h4, h5]
+  read:
+    enabled: true
+    query_template: 'from(bucket: "benchmark") |> range(start: -2h) |> filter(fn: (r) => r.host == "h1") |> limit(n: 25)'
+    labels:
+      host: h1
+    parallel_clients: 1
+    expected_result_size: small
+  delete:
+    enabled: true
+    predicate: _measurement="benchmark" AND host="h1"
+    labels:
+      host: h1
+    start: "1970-01-01T00:00:00Z"
+    stop: "2100-01-01T00:00:00Z"
+    parallel_clients: 1

@@ -1,0 +1,23 @@
+name: tsdb_write_read_delete_smoke
+description: Minimaler gepinnter Smoke-Workload fuer den vertikalen Durchstich der Generation World.
+measurement_window_seconds: 60
+operations:
+  write:
+    enabled: true
+    batch_size: 100
+    parallel_clients: 1
+    compression: none
+    point_complexity: simple
+    tag_cardinality: low
+    batches: 1
+  read:
+    enabled: true
+    query_template: 'from(bucket: "benchmark") |> range(start: -1h) |> limit(n: 10)'
+    parallel_clients: 1
+    expected_result_size: small
+  delete:
+    enabled: true
+    predicate: _measurement="benchmark"
+    start: "1970-01-01T00:00:00Z"
+    stop: "2100-01-01T00:00:00Z"
+    parallel_clients: 1

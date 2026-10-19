@@ -1,0 +1,301 @@
+conditions:
+  - id: 1
+    name: L1_gemini_zeroshot
+    guidance_level: L1
+    model: gemini
+    prompting_strategy: zero_shot
+  - id: 2
+    name: L1_gemini_multishot
+    guidance_level: L1
+    model: gemini
+    prompting_strategy: multi_shot
+  - id: 7
+    name: L2_gemini_zeroshot
+    guidance_level: L2
+    model: gemini
+    prompting_strategy: zero_shot
+  - id: 8
+    name: L2_gemini_multishot
+    guidance_level: L2
+    model: gemini
+    prompting_strategy: multi_shot
+  - id: 13
+    name: L3_gemini_zeroshot
+    guidance_level: L3
+    model: gemini
+    prompting_strategy: zero_shot
+  - id: 14
+    name: L3_gemini_multishot
+    guidance_level: L3
+    model: gemini
+    prompting_strategy: multi_shot
+  - id: 19
+    name: L4_gemini_zeroshot
+    guidance_level: L4
+    model: gemini
+    prompting_strategy: zero_shot
+  - id: 20
+    name: L4_gemini_multishot
+    guidance_level: L4
+    model: gemini
+    prompting_strategy: multi_shot
+  - id: 25
+    name: L5_gemini_zeroshot
+    guidance_level: L5
+    model: gemini
+    prompting_strategy: zero_shot
+  - id: 26
+    name: L5_gemini_multishot
+    guidance_level: L5
+    model: gemini
+    prompting_strategy: multi_shot
+  - id: 3
+    name: L1_gemini_lite_zeroshot
+    guidance_level: L1
+    model: gemini_lite
+    prompting_strategy: zero_shot
+  - id: 4
+    name: L1_gemini_lite_multishot
+    guidance_level: L1
+    model: gemini_lite
+    prompting_strategy: multi_shot
+  - id: 9
+    name: L2_gemini_lite_zeroshot
+    guidance_level: L2
+    model: gemini_lite
+    prompting_strategy: zero_shot
+  - id: 10
+    name: L2_gemini_lite_multishot
+    guidance_level: L2
+    model: gemini_lite
+    prompting_strategy: multi_shot
+  - id: 15
+    name: L3_gemini_lite_zeroshot
+    guidance_level: L3
+    model: gemini_lite
+    prompting_strategy: zero_shot
+  - id: 16
+    name: L3_gemini_lite_multishot
+    guidance_level: L3
+    model: gemini_lite
+    prompting_strategy: multi_shot
+  - id: 21
+    name: L4_gemini_lite_zeroshot
+    guidance_level: L4
+    model: gemini_lite
+    prompting_strategy: zero_shot
+  - id: 22
+    name: L4_gemini_lite_multishot
+    guidance_level: L4
+    model: gemini_lite
+    prompting_strategy: multi_shot
+  - id: 27
+    name: L5_gemini_lite_zeroshot
+    guidance_level: L5
+    model: gemini_lite
+    prompting_strategy: zero_shot
+  - id: 28
+    name: L5_gemini_lite_multishot
+    guidance_level: L5
+    model: gemini_lite
+    prompting_strategy: multi_shot
+  - id: 5
+    name: L1_model_c_zeroshot
+    guidance_level: L1
+    model: model_c
+    prompting_strategy: zero_shot
+  - id: 6
+    name: L1_model_c_multishot
+    guidance_level: L1
+    model: model_c
+    prompting_strategy: multi_shot
+  - id: 11
+    name: L2_model_c_zeroshot
+    guidance_level: L2
+    model: model_c
+    prompting_strategy: zero_shot
+  - id: 12
+    name: L2_model_c_multishot
+    guidance_level: L2
+    model: model_c
+    prompting_strategy: multi_shot
+  - id: 17
+    name: L3_model_c_zeroshot
+    guidance_level: L3
+    model: model_c
+    prompting_strategy: zero_shot
+  - id: 18
+    name: L3_model_c_multishot
+    guidance_level: L3
+    model: model_c
+    prompting_strategy: multi_shot
+  - id: 23
+    name: L4_model_c_zeroshot
+    guidance_level: L4
+    model: model_c
+    prompting_strategy: zero_shot
+  - id: 24
+    name: L4_model_c_multishot
+    guidance_level: L4
+    model: model_c
+    prompting_strategy: multi_shot
+  - id: 29
+    name: L5_model_c_zeroshot
+    guidance_level: L5
+    model: model_c
+    prompting_strategy: zero_shot
+  - id: 30
+    name: L5_model_c_multishot
+    guidance_level: L5
+    model: model_c
+    prompting_strategy: multi_shot
+  - id: 31
+    name: L1_model_d_zeroshot
+    guidance_level: L1
+    model: model_d
+    prompting_strategy: zero_shot
+  - id: 32
+    name: L1_model_d_multishot
+    guidance_level: L1
+    model: model_d
+    prompting_strategy: multi_shot
+  - id: 33
+    name: L2_model_d_zeroshot
+    guidance_level: L2
+    model: model_d
+    prompting_strategy: zero_shot
+  - id: 34
+    name: L2_model_d_multishot
+    guidance_level: L2
+    model: model_d
+    prompting_strategy: multi_shot
+  - id: 35
+    name: L3_model_d_zeroshot
+    guidance_level: L3
+    model: model_d
+    prompting_strategy: zero_shot
+  - id: 36
+    name: L3_model_d_multishot
+    guidance_level: L3
+    model: model_d
+    prompting_strategy: multi_shot
+  - id: 37
+    name: L4_model_d_zeroshot
+    guidance_level: L4
+    model: model_d
+    prompting_strategy: zero_shot
+  - id: 38
+    name: L4_model_d_multishot
+    guidance_level: L4
+    model: model_d
+    prompting_strategy: multi_shot
+  - id: 39
+    name: L5_model_d_zeroshot
+    guidance_level: L5
+    model: model_d
+    prompting_strategy: zero_shot
+  - id: 40
+    name: L5_model_d_multishot
+    guidance_level: L5
+    model: model_d
+    prompting_strategy: multi_shot
+  - id: 41
+    name: L1_claude_haiku_zeroshot
+    guidance_level: L1
+    model: claude_haiku
+    prompting_strategy: zero_shot
+  - id: 42
+    name: L1_claude_haiku_multishot
+    guidance_level: L1
+    model: claude_haiku
+    prompting_strategy: multi_shot
+  - id: 43
+    name: L2_claude_haiku_zeroshot
+    guidance_level: L2
+    model: claude_haiku
+    prompting_strategy: zero_shot
+  - id: 44
+    name: L2_claude_haiku_multishot
+    guidance_level: L2
+    model: claude_haiku
+    prompting_strategy: multi_shot
+  - id: 45
+    name: L3_claude_haiku_zeroshot
+    guidance_level: L3
+    model: claude_haiku
+    prompting_strategy: zero_shot
+  - id: 46
+    name: L3_claude_haiku_multishot
+    guidance_level: L3
+    model: claude_haiku
+    prompting_strategy: multi_shot
+  - id: 47
+    name: L4_claude_haiku_zeroshot
+    guidance_level: L4
+    model: claude_haiku
+    prompting_strategy: zero_shot
+  - id: 48
+    name: L4_claude_haiku_multishot
+    guidance_level: L4
+    model: claude_haiku
+    prompting_strategy: multi_shot
+  - id: 49
+    name: L5_claude_haiku_zeroshot
+    guidance_level: L5
+    model: claude_haiku
+    prompting_strategy: zero_shot
+  - id: 50
+    name: L5_claude_haiku_multishot
+    guidance_level: L5
+    model: claude_haiku
+    prompting_strategy: multi_shot
+  - id: 51
+    name: L1_glm_zeroshot
+    guidance_level: L1
+    model: glm
+    prompting_strategy: zero_shot
+  - id: 52
+    name: L1_glm_multishot
+    guidance_level: L1
+    model: glm
+    prompting_strategy: multi_shot
+  - id: 53
+    name: L2_glm_zeroshot
+    guidance_level: L2
+    model: glm
+    prompting_strategy: zero_shot
+  - id: 54
+    name: L2_glm_multishot
+    guidance_level: L2
+    model: glm
+    prompting_strategy: multi_shot
+  - id: 55
+    name: L3_glm_zeroshot
+    guidance_level: L3
+    model: glm
+    prompting_strategy: zero_shot
+  - id: 56
+    name: L3_glm_multishot
+    guidance_level: L3
+    model: glm
+    prompting_strategy: multi_shot
+  - id: 57
+    name: L4_glm_zeroshot
+    guidance_level: L4
+    model: glm
+    prompting_strategy: zero_shot
+  - id: 58
+    name: L4_glm_multishot
+    guidance_level: L4
+    model: glm
+    prompting_strategy: multi_shot
+  - id: 59
+    name: L5_glm_zeroshot
+    guidance_level: L5
+    model: glm
+    prompting_strategy: zero_shot
+  - id: 60
+    name: L5_glm_multishot
+    guidance_level: L5
+    model: glm
+    prompting_strategy: multi_shot

@@ -1,0 +1,39 @@
+name: tsdb_write_read_delete_v3
+description: >-
+  Workload v3 (Epoche 6): Workload v2 als Last. Schreiben in 10 Batches zu je 100 Punkten
+  (Label host zyklisch h1..h5, Millisekunden-Zeitstempel), 20 identische Reads (letzte 2 h,
+  host=h1, hoechstens 25 Punkte), 1 Delete (host=h1, voller Zeitraum). Damit hat Stufe B je
+  Operation mehrere Requests: Throughput und Latenz-Perzentile sind Verteilungen, nicht
+  Einzelwerte. Konformitaet (evaluation/conformance.py): akzeptierte Punkte = batch_size x
+  batches hart; Request-Zahlen (batches, repeats) weich als Abweichung. Die spec-exklusiven
+  Affordanzen von v2 (ts_unit, Label-Filter) bleiben unveraendert -> spec_coverage vergleichbar.
+  v2 liegt unveraendert in config/workload_v2.yaml, v1 in config/workload_v1.yaml.
+measurement_window_seconds: 60
+operations:
+  write:
+    enabled: true
+    batch_size: 100
+    parallel_clients: 1
+    compression: none
+    point_complexity: simple
+    tag_cardinality: low
+    batches: 10
+    ts_unit: ms
+    label_values:
+      host: [h1, h2, h3, h4, h5]
+  read:
+    enabled: true
+    query_template: 'from(bucket: "benchmark") |> range(start: -2h) |> filter(fn: (r) => r.host == "h1") |> limit(n: 25)'
+    labels:
+      host: h1
+    repeats: 20
+    parallel_clients: 1
+    expected_result_size: small
+  delete:
+    enabled: true
+    predicate: _measurement="benchmark" AND host="h1"
+    labels:
+      host: h1
+    start: "1970-01-01T00:00:00Z"
+    stop: "2100-01-01T00:00:00Z"
+    parallel_clients: 1

@@ -1,0 +1,101 @@
+[project]
+name = "benchmark-agent"
+version = "0.1.0"
+description = "Harness for LLM-guided generation and evaluation of performance benchmarks."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.14"
+dependencies = [
+  "aiohttp",
+  "behave",
+  "gherlint",
+  "google-genai",
+  "httpx",
+  "matplotlib",
+  "numpy",
+  "pydantic",
+  "scipy",
+  "pydantic-settings",
+  "pyyaml",
+  "typer",
+]
+
+[project.scripts]
+benchmark-agent = "benchmark_agent.cli:app"
+
+[dependency-groups]
+bddbench = [
+    "influxdb-client==1.49.0",
+    "reactivex==4.1.0",
+]
+dev = [
+  "mypy",
+  "pytest",
+  "ruff",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+extend-exclude = ["tests/fixtures/invalid_steps"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "tests"]
+addopts = "-m 'not live_sut and not gemini_live'"
+markers = [
+  "live_sut: requires a reachable InfluxDB on the configured direct URL",
+  "gemini_live: requires BENCHMARK_AGENT_GEMINI_API_KEY or GEMINI_API_KEY",
+]
+
+[tool.mypy]
+python_version = "3.14"
+files = ["src", "tests", "scripts"]
+strict = true
+mypy_path = ["src", "tests"]
+explicit_package_bases = true
+exclude = ["tests/fixtures/"]
+
+[[tool.mypy.overrides]]
+module = [
+  "conftest",
+  "fakes",
+  "fake_influx",
+  "test_cli",
+  "test_config",
+  "test_evaluation",
+  "test_generation",
+  "test_llm",
+  "test_matrix",
+  "test_measurement",
+  "test_probe",
+  "test_seed_matrix",
+]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[[tool.mypy.overrides]]
+module = ["behave", "behave.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["gherlint", "gherlint.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["yaml"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["mpl_toolkits", "mpl_toolkits.*", "scipy", "scipy.*"]
+ignore_missing_imports = true

@@ -1,0 +1,308 @@
+openapi: 3.0.3
+info:
+  title: Kestrel metrics service — REST API
+  version: "1.0"
+  description: |
+    Kestrel stores timestamped *points* in *series*. A point has a time `t`, zero or more string
+    *labels* (for example `host=web-01`) and one or more numeric *metrics*. Series belong to a
+    *store*, stores belong to a *tenant*; both are part of every points URL.
+
+    The HTTP verb selects the operation on a series' points: `PUT` appends points, `GET` reads
+    points, `DELETE` removes points. Writes answer `201 Created`, deletes `200 OK`, both with a
+    small JSON body. Every points request carries the API token in the `X-Api-Token` header.
+    Errors answer `4xx` with `{"error": "<message>", "code": "<code>"}`; the message names the
+    parameter or field that was expected.
+servers:
+  - url: "{KESTREL_ENDPOINT}"
+    description: Base URL of the system under test (injected as environment variable KESTREL_ENDPOINT)
+    variables:
+      KESTREL_ENDPOINT:
+        default: http://127.0.0.1:8086
+security:
+  - ApiToken: []
+tags:
+  - name: meta
+  - name: points
+paths:
+  /v1:
+    get:
+      tags: [meta]
+      summary: Endpoint index
+      security: []
+      responses:
+        "200":
+          description: Service name, API version and the list of endpoints.
+          content:
+            application/json:
+              schema:
+                type: object
+  /v1/status:
+    get:
+      tags: [meta]
+      summary: Service state
+      security: []
+      responses:
+        "200":
+          description: The service is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state:
+                    type: string
+                    example: up
+        "503":
+          description: The service is down.
+  /v1/tenants/{tenant}/stores/{store}/series/{series}/points:
+    parameters:
+      - $ref: "#/components/parameters/Tenant"
+      - $ref: "#/components/parameters/Store"
+      - $ref: "#/components/parameters/Series"
+    put:
+      tags: [points]
+      summary: Append points to a series
+      description: |
+        Appends the points of the body to the series. The body is columnar: `columns` names the
+        columns, every entry of `rows` is one point with one value per column, `labels` lists the
+        columns that are string labels; all other columns except `t` are numeric metrics
+        (stored as 64-bit floats; booleans and strings are accepted as well). The time column `t`
+        is an integer in the unit given by the `unit` query parameter (default nanoseconds).
+      parameters:
+        - name: unit
+          in: query
+          required: false
+          description: Unit of the `t` column.
+          schema:
+            type: string
+            enum: [ns, us, ms, s]
+            default: ns
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PointsBody"
+            example:
+              columns: [t, host, region, usage]
+              labels: [host, region]
+              rows:
+                - [1787845240455, web-01, eu, 0.42]
+                - [1787845240455, web-02, eu, 0.55]
+      responses:
+        "201":
+          description: All points were appended.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WriteResult"
+              example: { written: 2, series: cpu }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: A metric type conflicts with the existing points of the series.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:
+      tags: [points]
+      summary: Read points of a series
+      description: |
+        Returns the points of the series whose time lies in the window `[since, until)`.
+        `since` is required and is either an ISO-8601 duration counted back from now (`PT2H`,
+        `PT30M`, `PT15S`, `P7D`) or an RFC3339 time; `until` (same formats) defaults to now.
+        `limit` bounds the number of points in the reply (a global bound, not per label).
+        `label.<name>=<value>` parameters keep only points carrying exactly that label; they can
+        be repeated for several labels. Every point in the reply carries `t` (RFC3339), `metric`
+        (the metric name), `v` (its value) and one key per label.
+      parameters:
+        - name: since
+          in: query
+          required: true
+          description: Start of the window — ISO-8601 duration back from now, or RFC3339 time.
+          schema:
+            type: string
+            example: PT2H
+        - name: until
+          in: query
+          required: false
+          description: End of the window (same formats); defaults to now.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Upper bound for the number of points in the reply.
+          schema:
+            type: integer
+            minimum: 1
+        - name: label.<name>
+          in: query
+          required: false
+          description: Only points whose label `<name>` equals the value, e.g. `label.host=web-01`.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The matching points.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadResult"
+              example:
+                series: cpu
+                count: 1
+                points:
+                  - t: "2026-08-27T18:00:00Z"
+                    metric: usage
+                    v: 0.42
+                    host: web-01
+                    region: eu
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    delete:
+      tags: [points]
+      summary: Remove points of a series in a time range
+      description: |
+        Removes the points of the series with `from <= t < to` (both RFC3339, both required).
+        `label.<name>=<value>` parameters restrict the removal to points carrying that label.
+        Use `from=1970-01-01T00:00:00Z` and `to=2100-01-01T00:00:00Z` for the whole series.
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: label.<name>
+          in: query
+          required: false
+          description: Only points whose label `<name>` equals the value.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The removal was applied.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+              example: { removed: true, series: cpu }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+components:
+  securitySchemes:
+    ApiToken:
+      type: apiKey
+      in: header
+      name: X-Api-Token
+      description: API token (injected as environment variable KESTREL_TOKEN).
+  parameters:
+    Tenant:
+      name: tenant
+      in: path
+      required: true
+      description: Tenant name (injected as environment variable KESTREL_TENANT).
+      schema:
+        type: string
+    Store:
+      name: store
+      in: path
+      required: true
+      description: Store name (injected as environment variable KESTREL_STORE).
+      schema:
+        type: string
+    Series:
+      name: series
+      in: path
+      required: true
+      description: Series name, for example `cpu` or `benchmark`.
+      schema:
+        type: string
+  responses:
+    BadRequest:
+      description: The request is malformed; `error` names the expected parameter or field.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "unknown query parameter 'units'; Kestrel uses unit"
+            code: unsupported_parameter
+    Unauthorized:
+      description: The `X-Api-Token` header is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+    PointsBody:
+      type: object
+      required: [columns, rows]
+      additionalProperties: false
+      properties:
+        columns:
+          type: array
+          minItems: 2
+          description: Column names; must contain the time column `t`.
+          items:
+            type: string
+        labels:
+          type: array
+          description: Names of the columns that are string labels (subset of `columns`).
+          items:
+            type: string
+        rows:
+          type: array
+          minItems: 1
+          description: One array per point, in the order of `columns`.
+          items:
+            type: array
+            items: {}
+    WriteResult:
+      type: object
+      properties:
+        written:
+          type: integer
+        series:
+          type: string
+    ReadResult:
+      type: object
+      properties:
+        series:
+          type: string
+        count:
+          type: integer
+        points:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    DeleteResult:
+      type: object
+      properties:
+        removed:
+          type: boolean
+        series:
+          type: string

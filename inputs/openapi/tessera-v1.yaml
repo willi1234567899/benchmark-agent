@@ -1,0 +1,347 @@
+openapi: 3.0.3
+info:
+  title: Tessera time-series store — HTTP API
+  version: "1.0"
+  description: |
+    Tessera stores timestamped records in *series*. A record belongs to exactly one series,
+    carries an optional set of string *labels* (for example `host=web-01`), one or more named
+    *values* and a timestamp. Series live in a *store*; stores belong to a *space*.
+
+    All data endpoints are `POST` requests with a JSON body and answer with JSON.
+    Successful writes and purges answer `200 OK` with a small JSON body.
+    Every data endpoint requires the API key in the `X-Tessera-Key` request header.
+    Errors answer `4xx` with `{"error": "<message>", "code": "<code>"}`; the message names
+    the parameter or field that was expected.
+servers:
+  - url: "{TESSERA_URL}"
+    description: Base URL of the system under test (injected as environment variable TESSERA_URL)
+    variables:
+      TESSERA_URL:
+        default: http://127.0.0.1:8086
+security:
+  - ApiKey: []
+tags:
+  - name: meta
+  - name: data
+paths:
+  /tessera/v1:
+    get:
+      tags: [meta]
+      summary: Endpoint index
+      security: []
+      responses:
+        "200":
+          description: Service name, API version and the list of endpoints.
+          content:
+            application/json:
+              schema:
+                type: object
+  /tessera/v1/health:
+    get:
+      tags: [meta]
+      summary: Readiness probe
+      security: []
+      responses:
+        "200":
+          description: The store is ready.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ready
+        "503":
+          description: The store is not ready.
+  /tessera/v1/ingest:
+    post:
+      tags: [data]
+      summary: Append records to one or more series
+      description: |
+        Appends every record of the body to its series inside `store`. Numeric values are stored
+        as 64-bit floats, booleans as booleans, strings as strings. A record without `ts` gets the
+        server time. `ts` is an integer in the unit given by `ts_unit` (default nanoseconds).
+        Records are appended as one batch; the reply reports how many were accepted.
+      parameters:
+        - $ref: "#/components/parameters/Space"
+        - $ref: "#/components/parameters/Store"
+        - name: ts_unit
+          in: query
+          required: false
+          description: Unit of the `ts` field of every record.
+          schema:
+            type: string
+            enum: [ns, us, ms, s]
+            default: ns
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IngestRequest"
+            example:
+              records:
+                - series: cpu
+                  labels: { host: web-01, region: eu }
+                  values: { usage: 0.42 }
+                  ts: 1787845240455471104
+                - series: cpu
+                  labels: { host: web-02, region: eu }
+                  values: { usage: 0.55 }
+                  ts: 1787845240455471104
+      responses:
+        "200":
+          description: All records were accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IngestResponse"
+              example: { accepted: 2 }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: A value type conflicts with the existing values of the series.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /tessera/v1/fetch:
+    post:
+      tags: [data]
+      summary: Read the rows of a series inside a time window
+      description: |
+        Returns the records of `series` in `store` whose timestamp lies inside `window`.
+        `window.from` and `window.to` are either durations relative to now (`-1h`, `-30m`,
+        `-15s`, `-7d`) or RFC3339 times (`2026-08-27T18:00:00Z`); `window.to` defaults to now.
+        `max_rows` bounds the number of rows in the reply (a global bound, not per label
+        combination). Each row carries `ts` (RFC3339), `metric` (the value name), `value`,
+        `series` and one key per label.
+      parameters:
+        - $ref: "#/components/parameters/Space"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FetchRequest"
+            example:
+              store: benchmark
+              series: cpu
+              window: { from: "-1h" }
+              max_rows: 10
+      responses:
+        "200":
+          description: The matching rows.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FetchResponse"
+              example:
+                series: cpu
+                row_count: 1
+                rows:
+                  - ts: "2026-08-27T18:00:00Z"
+                    metric: usage
+                    value: 0.42
+                    series: cpu
+                    host: web-01
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /tessera/v1/purge:
+    post:
+      tags: [data]
+      summary: Remove the records of a series inside a time range
+      description: |
+        Deletes every record of `series` in `store` with `from <= ts < until` (both RFC3339).
+        Optional `labels` restrict the purge to records carrying exactly those labels.
+        Use `from: "1970-01-01T00:00:00Z"` and `until: "2100-01-01T00:00:00Z"` to purge the
+        whole series.
+      parameters:
+        - $ref: "#/components/parameters/Space"
+        - $ref: "#/components/parameters/Store"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurgeRequest"
+            example:
+              series: cpu
+              from: "1970-01-01T00:00:00Z"
+              until: "2100-01-01T00:00:00Z"
+      responses:
+        "200":
+          description: The purge was applied.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurgeResponse"
+              example: { purged: true, series: cpu }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-Tessera-Key
+      description: API key (injected as environment variable TESSERA_KEY).
+  parameters:
+    Space:
+      name: space
+      in: query
+      required: true
+      description: Space name (injected as environment variable TESSERA_SPACE).
+      schema:
+        type: string
+    Store:
+      name: store
+      in: query
+      required: true
+      description: Store name (injected as environment variable TESSERA_STORE).
+      schema:
+        type: string
+  responses:
+    BadRequest:
+      description: The request is malformed; `error` names the expected parameter or field.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "unknown query parameter 'ts_units'; Tessera uses 'ts_unit'"
+            code: unsupported_parameter
+    Unauthorized:
+      description: The `X-Tessera-Key` header is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+    Record:
+      type: object
+      required: [series, values]
+      additionalProperties: false
+      properties:
+        series:
+          type: string
+          description: Series name, for example `cpu` or `benchmark`.
+        labels:
+          type: object
+          description: String labels that identify the record's origin (low cardinality).
+          additionalProperties:
+            type: string
+        values:
+          type: object
+          description: One or more named values; numbers are stored as 64-bit floats.
+          minProperties: 1
+          additionalProperties:
+            oneOf:
+              - type: number
+              - type: boolean
+              - type: string
+        ts:
+          type: integer
+          format: int64
+          description: Timestamp in the unit given by the `ts_unit` query parameter.
+    IngestRequest:
+      type: object
+      required: [records]
+      additionalProperties: false
+      properties:
+        records:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/Record"
+    IngestResponse:
+      type: object
+      properties:
+        accepted:
+          type: integer
+          description: Number of records that were appended.
+    Window:
+      type: object
+      required: [from]
+      additionalProperties: false
+      properties:
+        from:
+          type: string
+          description: Start of the window — duration relative to now (`-1h`) or RFC3339 time.
+          example: "-1h"
+        to:
+          type: string
+          description: End of the window (same formats); defaults to now.
+    FetchRequest:
+      type: object
+      required: [store, series, window]
+      additionalProperties: false
+      properties:
+        store:
+          type: string
+        series:
+          type: string
+        window:
+          $ref: "#/components/schemas/Window"
+        max_rows:
+          type: integer
+          minimum: 1
+          description: Upper bound for the number of rows in the reply.
+        labels:
+          type: object
+          description: Only rows carrying exactly these labels.
+          additionalProperties:
+            type: string
+    FetchResponse:
+      type: object
+      properties:
+        series:
+          type: string
+        row_count:
+          type: integer
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    PurgeRequest:
+      type: object
+      required: [series, from, until]
+      additionalProperties: false
+      properties:
+        series:
+          type: string
+        from:
+          type: string
+          format: date-time
+          description: Inclusive start of the purge range (RFC3339).
+        until:
+          type: string
+          format: date-time
+          description: Exclusive end of the purge range (RFC3339).
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+    PurgeResponse:
+      type: object
+      properties:
+        purged:
+          type: boolean
+        series:
+          type: string
